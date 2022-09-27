@@ -21,7 +21,7 @@ public enum AddressPurpose {
 				return purpose;
 			}
 		}
-		throw new UnprocessableEntityException("Invalid Order Status.");
+		throw new UnprocessableEntityException("Invalid Address purpose.");
 	}
 
 }
