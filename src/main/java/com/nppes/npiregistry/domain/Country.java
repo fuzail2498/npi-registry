@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Entity
-@Table(name = "country_temp")
+@Table(name = "country")
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString

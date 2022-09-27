@@ -7,5 +7,8 @@ import com.nppes.npiregistry.domain.Country;
 
 @Repository
 public interface CountryRepository extends JpaRepository<Country, Long> {
+	Country findByCode(String countryCode);
+
+	Country findByName(String countryName);
 
 }

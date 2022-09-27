@@ -20,9 +20,29 @@ import com.opencsv.bean.CsvToBeanBuilder;
 
 @Service
 public class CountryService {
-	
+
 	@Autowired
 	private CountryRepository countryRepository;
+
+	/**
+	 * This method is used to get the country by country name
+	 * 
+	 * @param countryName
+	 * @return
+	 */
+	public Country getCountryByName(String countryName) {
+		return countryRepository.findByName(countryName);
+	}
+
+	/**
+	 * This method is used to get the country by country code
+	 * 
+	 * @param countryCode
+	 * @return
+	 */
+	public Country getCountryByCode(String countryCode) {
+		return countryRepository.findByCode(countryCode);
+	}
 
 	/**
 	 * This method is used to import the country data from the csv file.

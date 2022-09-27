@@ -16,11 +16,23 @@ public class EntityTypeCodeController {
 	@Autowired
 	EntityTypeCodeService entityTypeCodeService;
 
+	/**
+	 * This controller method is used to get all Entity Type Code
+	 * 
+	 * @param code
+	 * @return
+	 */
 	@GetMapping("/v1/entity-type-code")
 	public List<EntityTypeCode> getAllEntityTypeCodes() {
 		return entityTypeCodeService.getAllEntityTypeCodes();
 	}
 
+	/**
+	 * This controller method is used to get Entity Type Code by code
+	 * 
+	 * @param code
+	 * @return
+	 */
 	@GetMapping("/v1/entity-type-code/{code}")
 	public EntityTypeCode getAllEntityTypeCodes(@PathVariable("code") int code) {
 		EntityTypeCode entityTypeCode = entityTypeCodeService.getEntityTypeCodesByCode(code);

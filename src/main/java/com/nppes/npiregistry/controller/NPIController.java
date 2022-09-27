@@ -15,9 +15,18 @@ import com.nppes.npiregistry.service.NPIService;
 public class NPIController {
 	@Autowired
 	NPIService npiService;
-	
+
+	/**
+	 * This controller method is used to save and update npi-registry CSV file into
+	 * DB.
+	 * 
+	 * @param multipartFile
+	 * @param request
+	 * @return
+	 * @throws IOException
+	 */
 	@PostMapping("/v1/npi-registry/upload-csv")
-	public String importCountryCSVData(MultipartFile multipartFile, HttpServletRequest request) throws IOException {
+	public String importNPIRegistryCSVData(MultipartFile multipartFile, HttpServletRequest request) throws IOException {
 		return npiService.importNPIRegistryCSVData(multipartFile);
 	}
 

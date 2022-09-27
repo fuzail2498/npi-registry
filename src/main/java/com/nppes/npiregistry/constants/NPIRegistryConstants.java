@@ -29,5 +29,27 @@ public class NPIRegistryConstants {
 	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_ENUMERATION_DATE = "Provider Enumeration Date";
 	public static final String NPI_REGISTRY_CSV_HEADER_CERTIFICATION_DATE = "Certification Date";
 	public static final String NPI_REGISTRY_CSV_HEADER_LAST_UPDATED_DATE = "Last Update Date";
+	
+	//HEADERS FOR BUSINESS MAILING ADDRESS
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_FIRST_LINE_BUSINESS_MAILING_ADDRESS ="Provider First Line Business Mailing Address";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_SECOND_LINE_BUSINESS_MAILING_ADDRESS = "Provider Second Line Business Mailing Address";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_BUSINESS_MAILING_ADDRESS_CITY_NAME = "Provider Business Mailing Address City Name";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_BUSINESS_MAILING_ADDRESS_STATE_NAME = "Provider Business Mailing Address State Name";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_BUSINESS_MAILING_ADDRESS_POSTAL_CODE = "Provider Business Mailing Address Postal Code";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_BUSINESS_MAILING_ADDRESS_COUNTRY_CODE = "Provider Business Mailing Address Country Code (If outside U.S.)";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_BUSINESS_MAILING_ADDRESS_TELEPHONE_NUMBER ="Provider Business Mailing Address Telephone Number";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_BUSINESS_MAILING_ADDRESS_FAX_NUMBER ="Provider Business Mailing Address Fax Number";
+	//HEADERS FOR BUSINESS PRACTICE LOCATON ADDRESS
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_FIRST_LINE_BUSINESS_PL_ADDRESS = "Provider First Line Business Practice Location Address";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_SECOND_LINE_BUSINESS_PL_ADDRESS ="Provider Second Line Business Practice Location Address";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_BUSINESS_PL_ADDRESS_CITY_NAME ="Provider Business Practice Location Address City Name";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_BUSINESS_PL_ADDRESS_STATE_NAME = "Provider Business Practice Location Address State Name";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_BUSINESS_PL_ADDRESS_POSTAL_CODE = "Provider Business Practice Location Address Postal Code";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_BUSINESS_PL_ADDRESS_COUNTRY_CODE ="Provider Business Practice Location Address Country Code (If \r\n"
+			+ "outside U.S.)";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_BUSINESS_PL_ADDRESS_TELEPHONE_NUMBER = "Provider Business Practice Location Address Telephone Number";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_BUSINESS_PL_ADDRESS_FAX_NUMBER ="Provider Business Practice Location Address Fax Number";
+	
+	
 
 }

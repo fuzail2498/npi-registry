@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.csvreader.CsvReader;
 import com.nppes.npiregistry.constants.NPIRegistryConstants;
+import com.nppes.npiregistry.domain.Address;
 import com.nppes.npiregistry.domain.EntityTypeCode;
 import com.nppes.npiregistry.domain.GenderCode;
 import com.nppes.npiregistry.domain.NPI;
@@ -31,15 +32,25 @@ public class NPIService {
 	private NPIRepository npiRepository; 
 	private EntityTypeCodeService entityTypeCodeService;
 	private GenderCodeRepository genderCodeRepository;
+	private AddressService addressService;
 	
 	@Autowired
 	public NPIService(NPIRepository npiRepository, EntityTypeCodeService entityTypeCodeService,
-			GenderCodeRepository genderCodeRepository) {
+			GenderCodeRepository genderCodeRepository, AddressService addressService) {
 		this.npiRepository = npiRepository;
 		this.entityTypeCodeService = entityTypeCodeService;
 		this.genderCodeRepository = genderCodeRepository;
+		this.addressService = addressService;
 	}
 
+	/**
+	 * This method is used to read data from CSV file related to NPI-REGISTRY and
+	 * associated data related to NPIs into DB
+	 * 
+	 * @param multipartFile
+	 * @return
+	 * @throws IOException
+	 */
 	public String importNPIRegistryCSVData(MultipartFile multipartFile) throws IOException {
 		if (multipartFile == null || FilenameUtils.getExtension(multipartFile.getOriginalFilename()) == "") {
 			throw new UnprocessableEntityException("Please provide a valid csv file.");
@@ -93,16 +104,18 @@ public class NPIService {
 			if (StringUtils.isBlank(npi)) {
 				continue;
 			}
+			//This condition is used when npi is deactivated
+			if (StringUtils.isBlank(lastUpdatedDate) && StringUtils.isNotBlank(npi) && StringUtils.isNotBlank(nPIDeactivationDate)) {
+				//put logic what to with deactivated NPIs
+				continue;
+			}
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/d/yyyy");
 			if (StringUtils.isNotBlank(lastUpdatedDate)) {
 				lastUpdatedDateObj = LocalDate.parse(lastUpdatedDate, formatter);
 			}
 			NPI npiFromRepo = npiRepository.findByNpi(Long.parseLong(npi));
 			if (npiFromRepo == null || (npiFromRepo != null && lastUpdatedDateObj.isAfter(npiFromRepo.getLastUpdatedDate()))) {
-				NPI nPI = new NPI();
-				if (npiFromRepo != null) {
-					nPI.setId(npiFromRepo.getId());
-				}
+				
 				if (StringUtils.isNotBlank(entityTypeCode)) {
 					if (entityTypeCode.trim().equalsIgnoreCase("1")) {
 						entityTypeCodeobj = entityTypeCodes.get(0);
@@ -126,13 +139,17 @@ public class NPIService {
 				if (StringUtils.isNotBlank(nPIDeactivationDate)) {
 					nPIDeactivationDateObj = LocalDate.parse(nPIDeactivationDate, formatter);
 				}
+				
 
-				nPI = new NPI(StringUtils.isBlank(npi) ? 0 : Long.parseLong(npi), entityTypeCodeobj, genderCodeObj,
-						null, StringUtils.isBlank(replacementNPI) ? 0 : Long.parseLong(replacementNPI),
+				NPI nPI = new NPI(npiFromRepo != null ? npiFromRepo.getId() : null,
+						StringUtils.isBlank(npi) ? 0 : Long.parseLong(npi), entityTypeCodeobj, genderCodeObj, null,
+						StringUtils.isBlank(replacementNPI) ? 0 : Long.parseLong(replacementNPI),
 						employerIdentificationNumber, providerOrganizationName, providerFirstName, providerLastName,
 						providerMiddleName, providerNamePrefixText, providerNameSuffixText, providerCredentialText,
 						npiCertificationDateObj, nPIDeactivationDateObj, npiReactivationDateObj, lastUpdatedDateObj,
 						providerEnumerationDateObj, LocalDate.now());
+				List<Address> adressesForNPI = addressService.saveOrUpdateAdressesForNPIs(npiRecords,nPI);
+				nPI.setAddress(adressesForNPI);
 				npiData.add(nPI);
 			}
 		}
@@ -152,7 +169,7 @@ public class NPIService {
 //			});
 //		}
 //		executorService.shutdown();
-		npiData.forEach(System.out::println);
+//		npiData.forEach(System.out::println);
 		return "Successfully uploaded data";
 	}
 

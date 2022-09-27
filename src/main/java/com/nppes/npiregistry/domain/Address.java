@@ -3,10 +3,17 @@ package com.nppes.npiregistry.domain;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import com.nppes.npiregistry.enums.AddressPurpose;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,15 +26,20 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 @Data
-public class Address extends BaseEntity {
+public class Address{
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	protected Long id;
+	
 	@Column(name = "address_line1")
 	private String addressLine1;
 
 	@Column(name = "address_line2")
 	private String addressLine2;
 
-	@Column(name = "address_discriminator")
-	private String addressDiscriminator;
+	@Column(name = "address_purpose")
+	@Enumerated(EnumType.STRING)
+	private AddressPurpose addressPurpose;
 
 	@Column(name = "city_name")
 	private String cityName;
@@ -49,7 +61,7 @@ public class Address extends BaseEntity {
 	@Column(name = "fax_number")
 	private String faxNumber;
 
-	@Column(name = "telephone_extension")
+	@Column(name = "telephone_extention")
 	private String telephoneExtension;
 
 	@Column(name = "address_type")
