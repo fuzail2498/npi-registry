@@ -47,11 +47,11 @@ public class Address{
 	@Column(name = "postal_code")
 	private String postalCode;
 
-	@OneToOne(cascade = CascadeType.ALL)
+	@OneToOne(cascade = CascadeType.MERGE)
 	@JoinColumn(name = "country_id")
 	private Country country;
 
-	@OneToOne(cascade = CascadeType.ALL)
+	@OneToOne(cascade = CascadeType.MERGE)
 	@JoinColumn(name = "state_id")
 	private State state;
 
