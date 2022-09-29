@@ -1,5 +1,7 @@
 package com.nppes.npiregistry.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +32,16 @@ public class StateService {
 	 */
 	public State getStateByName(String stateName) {
 		return stateRepository.findByName(stateName);
+
+	}
+
+	/**
+	 * This method is used get the list of all states
+	 * 
+	 * @return
+	 */
+	public List<State> getAllState() {
+		return stateRepository.findAll();
 
 	}
 

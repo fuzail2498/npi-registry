@@ -3,8 +3,12 @@ package com.nppes.npiregistry.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,20 +19,18 @@ import com.nppes.npiregistry.domain.Country;
 import com.nppes.npiregistry.domain.NPI;
 import com.nppes.npiregistry.domain.State;
 import com.nppes.npiregistry.enums.AddressPurpose;
-import com.nppes.npiregistry.repository.CountryRepository;
-import com.nppes.npiregistry.repository.StateRepository;
 
 @Service
 public class AddressService {
-	StateService stateService;
-	CountryService countryService;
+	private StateService stateService;
+	private CountryService countryService;
 	
 	@Autowired
 	public AddressService(StateService stateService, CountryService countryService) {
 		this.stateService = stateService;
 		this.countryService = countryService;
 	}
-
+	private final Logger logger = LoggerFactory.getLogger(AddressService.class);
 
 	/**
 	 * This method take csv reader object and process the address associated to
@@ -36,10 +38,14 @@ public class AddressService {
 	 * 
 	 * @param npiRecords
 	 * @param nPI
+	 * @param npiFromRepo 
+	 * @param stateData 
+	 * @param countryData 
 	 * @return addresses
 	 * @throws IOException
 	 */
-	public List<Address> saveOrUpdateAdressesForNPIs(CsvReader npiRecords, NPI nPI) throws IOException {
+	public List<Address> saveOrUpdateAdressesForNPIs(CsvReader npiRecords, NPI nPI, NPI npiFromRepo, Map<String, Country> countryData, Map<String, State> stateData) throws IOException {
+		logger.info("Inside AddressService::saveOrUpdateAdressesForNPIs() : Started process to associate addresses with the NPI : {}", nPI.getNpi());
 		//HEADERS FOR BUSINESS MAILING ADDRESS
 		String providerFirstLineBusinessMailingAddress = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_FIRST_LINE_BUSINESS_MAILING_ADDRESS);
 		String providerSecondLineBusinessMailingAddress = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_SECOND_LINE_BUSINESS_MAILING_ADDRESS);
@@ -60,6 +66,8 @@ public class AddressService {
 		String providerBusinessPLAddressFaxNumber= npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_BUSINESS_PL_ADDRESS_FAX_NUMBER);
 		
 		List<Address> addresses = new ArrayList<>();
+		Optional<Address> businessMailingAddressFromRepo = Optional.empty();
+		Optional<Address> businessPLAddressFromRepo = Optional.empty();
 
 		if (StringUtils.isNotBlank(providerFirstLineBusinessMailingAddress)
 				|| StringUtils.isNotBlank(providerSecondLineBusinessMailingAddress)
@@ -69,17 +77,24 @@ public class AddressService {
 				|| StringUtils.isNotBlank(providerBusinessMailingAddressCountryCode)
 				|| StringUtils.isNotBlank(providerBusinessMailingAddressTelephoneNumber)
 				|| StringUtils.isNotBlank(providerBusinessMailingAddressFaxNumber)) {
+			logger.info("Inside AddressService::saveOrUpdateAdressesForNPIs() :: Creating address object for MAILING Business Address");
 			Country country = null;
 			State state = null;
 			if (StringUtils.isNotBlank(providerBusinessMailingAddressStateName)) {
-				state = stateService.getStateByReferenceCode(providerBusinessMailingAddressStateName);
+				state = stateData.get(providerBusinessMailingAddressStateName);
 			}
 			if (StringUtils.isNotBlank(providerBusinessMailingAddressCountryCode)) {
-				country = countryService.getCountryByCode(providerBusinessMailingAddressCountryCode);
+				country = countryData.get(providerBusinessMailingAddressCountryCode);
 			}
-			Address businessMailingAddress = new Address(null, providerFirstLineBusinessMailingAddress,
-					providerSecondLineBusinessMailingAddress, AddressPurpose.MAILING,
-					providerBusinessMailingAddressCityName, providerBusinessMailingAddressPostalCode, country, state,
+			if (npiFromRepo != null) {
+				businessMailingAddressFromRepo = npiFromRepo.getAddress().stream()
+						.filter(a -> a.getAddressPurpose().equals(AddressPurpose.MAILING)).findAny();
+			}
+			Address businessMailingAddress = new Address(
+					businessMailingAddressFromRepo.isPresent() ? businessMailingAddressFromRepo.get().getId() : null,
+					providerFirstLineBusinessMailingAddress, providerSecondLineBusinessMailingAddress,
+					AddressPurpose.MAILING, providerBusinessMailingAddressCityName,
+					providerBusinessMailingAddressPostalCode, country, state,
 					providerBusinessMailingAddressTelephoneNumber, providerBusinessMailingAddressFaxNumber, "", "DOM",
 					false, nPI);
 			addresses.add(businessMailingAddress);
@@ -93,22 +108,30 @@ public class AddressService {
 				|| StringUtils.isNotBlank(providerBusinessPLAddressCountryCode)
 				|| StringUtils.isNotBlank(providerBusinessPLAddressTelephoneNumber)
 				|| StringUtils.isNotBlank(providerBusinessPLAddressFaxNumber)) {
+			logger.info("Inside AddressService::saveOrUpdateAdressesForNPIs() :: Creating address object for PL Business Address");
 			Country country = null;
 			State state = null;
 			if (StringUtils.isNotBlank(providerBusinessPLAddressStateName)) {
-				state = stateService.getStateByReferenceCode(providerBusinessPLAddressStateName);
+				state = stateData.get(providerBusinessPLAddressStateName);
 			}
 			if (StringUtils.isNotBlank(providerBusinessPLAddressCountryCode)) {
-				country = countryService.getCountryByCode(providerBusinessPLAddressCountryCode);
+				country = countryData.get(providerBusinessPLAddressCountryCode);
 			}
-			Address businessPLAddress = new Address(null, providerFirstLineBusinessPLAddress,
-					providerSecondLineBusinessPLAddress, AddressPurpose.LOCATION, providerBusinessPLAddressCityName,
-					providerBusinessPLAddressPostalCode, country, state, providerBusinessPLAddressTelephoneNumber,
-					providerBusinessPLAddressFaxNumber, "", "DOM", false, nPI);
+			if (npiFromRepo != null) {
+				businessPLAddressFromRepo = npiFromRepo.getAddress().stream()
+						.filter(a -> a.getAddressPurpose().equals(AddressPurpose.LOCATION)).findAny();
+			}
+			Address businessPLAddress = new Address(
+					businessPLAddressFromRepo.isPresent() ? businessPLAddressFromRepo.get().getId() : null,
+					providerFirstLineBusinessPLAddress, providerSecondLineBusinessPLAddress, AddressPurpose.LOCATION,
+					providerBusinessPLAddressCityName, providerBusinessPLAddressPostalCode, country, state,
+					providerBusinessPLAddressTelephoneNumber, providerBusinessPLAddressFaxNumber, "", "DOM", false,
+					nPI);
 			addresses.add(businessPLAddress);
 
 		}
-		
+		logger.info("Return successfully from AddressService::saveOrUpdateAdressesForNPIs() : Successfully complete process to associate these addresses : {} with the NPI : {}",
+				addresses, nPI.getNpi());
 		return addresses;
 		
 	}

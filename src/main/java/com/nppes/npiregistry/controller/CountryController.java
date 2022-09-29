@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.nppes.npiregistry.dto.CSVFileImportResponse;
 import com.nppes.npiregistry.service.CountryService;
 
 @RestController
@@ -27,7 +28,8 @@ public class CountryController {
 	 * @throws IOException
 	 */
 	@PostMapping("/v1/country/upload-csv")
-	public String importCountryCSVData(MultipartFile multipartFile, HttpServletRequest request) throws IOException {
+	public CSVFileImportResponse importCountryCSVData(MultipartFile multipartFile, HttpServletRequest request)
+			throws IOException {
 		return countryService.importCountryCSVData(multipartFile);
 	}
 }

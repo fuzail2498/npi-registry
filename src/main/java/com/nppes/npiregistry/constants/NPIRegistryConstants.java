@@ -50,6 +50,20 @@ public class NPIRegistryConstants {
 	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_BUSINESS_PL_ADDRESS_TELEPHONE_NUMBER = "Provider Business Practice Location Address Telephone Number";
 	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_BUSINESS_PL_ADDRESS_FAX_NUMBER ="Provider Business Practice Location Address Fax Number";
 	
+	// AUTHORIZED OFFICIAL HEADERS
+	public static final String NPI_REGISTRY_CSV_HEADER_AUTHORIZED_OFFICIAL_FIRST_NAME = "Authorized Official First Name";
+	public static final String NPI_REGISTRY_CSV_HEADER_AUTHORIZED_OFFICIAL_LAST_NAME = "Authorized Official Last Name";
+	public static final String NPI_REGISTRY_CSV_HEADER_AUTHORIZED_OFFICIAL_MIDDLE_NAME = "Authorized Official Middle Name";
+	public static final String NPI_REGISTRY_CSV_HEADER_AUTHORIZED_OFFICIAL_TITLE_OR_POSITION = "Authorized Official Title or Position";
+	public static final String NPI_REGISTRY_CSV_HEADER_AUTHORIZED_OFFICIAL_TELEPHONE_NUMBER = "Authorized Official Telephone Number";
+	public static final String NPI_REGISTRY_CSV_HEADER_AUTHORIZED_OFFICIAL_NAME_PREFIX_TEXT = "Authorized Official Name Prefix Text";
+	public static final String NPI_REGISTRY_CSV_HEADER_AUTHORIZED_OFFICIAL_NAME_SUFFIX_TEXT = "Authorized Official Name Suffix Text";
+	public static final String NPI_REGISTRY_CSV_HEADER_AUTHORIZED_OFFICIAL_CREDENTIAL_TEXT = "Authorized Official Credential Text";
+
+	public static final String NPI_REGISTRY_CSV_HEADER_IS_SOLE_PROPRIETER = "Is Sole Proprietor";
+	public static final String NPI_REGISTRY_CSV_HEADER_IS_ORGANIZATION_SUBPART = "Is Organization Subpart";
+	public static final String NPI_REGISTRY_CSV_HEADER_PARENT_ORGANIZATION_LBN = "Parent Organization LBN";
+	public static final String NPI_REGISTRY_CSV_HEADER_PARENT_ORGANIZATION_TIN = "Parent Organization TIN";
 	
 
 }
