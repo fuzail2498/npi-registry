@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nppes.npiregistry.domain.EntityTypeCode;
+import com.nppes.npiregistry.exception.NotFoundException;
 import com.nppes.npiregistry.exception.UnprocessableEntityException;
 import com.nppes.npiregistry.service.EntityTypeCodeService;
 
@@ -37,7 +38,7 @@ public class EntityTypeCodeController {
 	public EntityTypeCode getAllEntityTypeCodes(@PathVariable("code") int code) {
 		EntityTypeCode entityTypeCode = entityTypeCodeService.getEntityTypeCodesByCode(code);
 		if (entityTypeCode == null) {
-			throw new UnprocessableEntityException("Invalid Entity Type Code");
+			throw new NotFoundException("Invalid Entity Type Code");
 		}
 		return entityTypeCode;
 	}
