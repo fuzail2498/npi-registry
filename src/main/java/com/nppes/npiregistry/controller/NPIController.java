@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.nppes.npiregistry.dto.CSVFileImportResponse;
 import com.nppes.npiregistry.service.NPIService;
 
 @RestController
@@ -26,7 +27,7 @@ public class NPIController {
 	 * @throws IOException
 	 */
 	@PostMapping("/v1/npi-registry/upload-csv")
-	public String importNPIRegistryCSVData(MultipartFile multipartFile, HttpServletRequest request) throws IOException {
+	public CSVFileImportResponse importNPIRegistryCSVData(MultipartFile multipartFile, HttpServletRequest request) throws IOException {
 		return npiService.importNPIRegistryCSVData(multipartFile);
 	}
 

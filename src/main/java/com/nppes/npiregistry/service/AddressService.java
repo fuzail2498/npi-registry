@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,12 +16,9 @@ import com.csvreader.CsvReader;
 import com.nppes.npiregistry.constants.NPIRegistryConstants;
 import com.nppes.npiregistry.domain.Address;
 import com.nppes.npiregistry.domain.Country;
-import com.nppes.npiregistry.domain.MasterDataService;
 import com.nppes.npiregistry.domain.NPI;
 import com.nppes.npiregistry.domain.State;
 import com.nppes.npiregistry.enums.AddressPurpose;
-import com.nppes.npiregistry.repository.CountryRepository;
-import com.nppes.npiregistry.repository.StateRepository;
 
 @Service
 public class AddressService {
@@ -31,7 +30,7 @@ public class AddressService {
 		this.stateService = stateService;
 		this.countryService = countryService;
 	}
-
+	private final Logger logger = LoggerFactory.getLogger(AddressService.class);
 
 	/**
 	 * This method take csv reader object and process the address associated to
@@ -46,6 +45,7 @@ public class AddressService {
 	 * @throws IOException
 	 */
 	public List<Address> saveOrUpdateAdressesForNPIs(CsvReader npiRecords, NPI nPI, NPI npiFromRepo, Map<String, Country> countryData, Map<String, State> stateData) throws IOException {
+		logger.info("Inside AddressService::saveOrUpdateAdressesForNPIs() : Started process to associate addresses with the NPI : {}", nPI.getNpi());
 		//HEADERS FOR BUSINESS MAILING ADDRESS
 		String providerFirstLineBusinessMailingAddress = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_FIRST_LINE_BUSINESS_MAILING_ADDRESS);
 		String providerSecondLineBusinessMailingAddress = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_SECOND_LINE_BUSINESS_MAILING_ADDRESS);
@@ -77,6 +77,7 @@ public class AddressService {
 				|| StringUtils.isNotBlank(providerBusinessMailingAddressCountryCode)
 				|| StringUtils.isNotBlank(providerBusinessMailingAddressTelephoneNumber)
 				|| StringUtils.isNotBlank(providerBusinessMailingAddressFaxNumber)) {
+			logger.info("Inside AddressService::saveOrUpdateAdressesForNPIs() :: Creating address object for MAILING Business Address");
 			Country country = null;
 			State state = null;
 			if (StringUtils.isNotBlank(providerBusinessMailingAddressStateName)) {
@@ -107,6 +108,7 @@ public class AddressService {
 				|| StringUtils.isNotBlank(providerBusinessPLAddressCountryCode)
 				|| StringUtils.isNotBlank(providerBusinessPLAddressTelephoneNumber)
 				|| StringUtils.isNotBlank(providerBusinessPLAddressFaxNumber)) {
+			logger.info("Inside AddressService::saveOrUpdateAdressesForNPIs() :: Creating address object for PL Business Address");
 			Country country = null;
 			State state = null;
 			if (StringUtils.isNotBlank(providerBusinessPLAddressStateName)) {
@@ -128,7 +130,8 @@ public class AddressService {
 			addresses.add(businessPLAddress);
 
 		}
-		
+		logger.info("Return successfully from AddressService::saveOrUpdateAdressesForNPIs() : Successfully complete process to associate these addresses : {} with the NPI : {}",
+				addresses, nPI.getNpi());
 		return addresses;
 		
 	}

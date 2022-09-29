@@ -9,10 +9,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,9 +28,10 @@ import com.nppes.npiregistry.domain.AuthorizedOfficial;
 import com.nppes.npiregistry.domain.Country;
 import com.nppes.npiregistry.domain.EntityTypeCode;
 import com.nppes.npiregistry.domain.GenderCode;
-import com.nppes.npiregistry.domain.MasterDataService;
 import com.nppes.npiregistry.domain.NPI;
 import com.nppes.npiregistry.domain.State;
+import com.nppes.npiregistry.dto.CSVFileImportResponse;
+import com.nppes.npiregistry.enums.ImportResult;
 import com.nppes.npiregistry.exception.UnprocessableEntityException;
 import com.nppes.npiregistry.repository.GenderCodeRepository;
 import com.nppes.npiregistry.repository.NPIRepository;
@@ -39,6 +44,7 @@ public class NPIService {
 	private GenderCodeRepository genderCodeRepository;
 	private AddressService addressService;
 	private MasterDataService masterDataService;
+	private final Logger logger = LoggerFactory.getLogger(NPIService.class);
 	
 	@Autowired
 	public NPIService(NPIRepository npiRepository, EntityTypeCodeService entityTypeCodeService,
@@ -55,26 +61,33 @@ public class NPIService {
 	 * associated data related to NPIs into DB
 	 * 
 	 * @param multipartFile
-	 * @return
+	 * @return CSVFileImportResponse
 	 * @throws IOException
 	 */
-	public String importNPIRegistryCSVData(MultipartFile multipartFile) throws IOException {
+	public CSVFileImportResponse importNPIRegistryCSVData(MultipartFile multipartFile) throws IOException {
+		logger.info("Inside NPISERVICE::importNPIRegistryCSVData():: Starting process for CSV loading");
 		if (multipartFile == null || FilenameUtils.getExtension(multipartFile.getOriginalFilename()) == "") {
+			logger.error("Inside NPISERVICE::importNPIRegistryCSVData() :: Please provide valid CSV file for NPI-REGISTRY");
 			throw new UnprocessableEntityException("Please provide a valid csv file.");
 		}
 		if (!FilenameUtils.getExtension(multipartFile.getOriginalFilename()).toUpperCase().equals("CSV")) {
+			logger.error("Inside NPISERVICE::importNPIRegistryCSVData() :: Invalid File extension,Only CSV file acceptable.");
 			throw new UnprocessableEntityException("Invalid File extension,Only CSV file acceptable.");
 		}
 		
 		List<NPI> npiData = new ArrayList<NPI>();
 		ExecutorService executorService = Executors.newFixedThreadPool(50);
 		CsvReader npiRecords = new CsvReader(multipartFile.getInputStream(), StandardCharsets.UTF_8);
-		List<GenderCode> genderCodes = genderCodeRepository.findAll();
-		List<EntityTypeCode> entityTypeCodes = entityTypeCodeService.getAllEntityTypeCodes();
-		Map<String, Country> countryData = masterDataService.getCountryData().get("countryData");
-		Map<String, State> stateData = masterDataService.getStateData().get("stateData");
+		Map<String, GenderCode> genderCodeMap = masterDataService.getGenderCodeMap();
+		Map<Integer, EntityTypeCode> entityTypeCodeMap = masterDataService.getEntityTypeCodeMap();
+		Map<String, Country> countryData = masterDataService.getCountyMap();
+		Map<String, State> stateData = masterDataService.getStateMap();
 		npiRecords.readHeaders();
+		AtomicLong lineCountForCSVFile = new AtomicLong();
 		while (npiRecords.readRecord()) {
+			lineCountForCSVFile.getAndIncrement();
+			logger.info("Inside NPISERVICE::importNPIRegistryCSVData() :: Reading CSV fila at line : {}",
+					lineCountForCSVFile.get());
 			EntityTypeCode entityTypeCodeobj = null;
 			GenderCode genderCodeObj = null;
 			LocalDate nPIDeactivationDateObj = null;
@@ -131,6 +144,7 @@ public class NPIService {
 			}
 			//This condition is used when npi is deactivated
 			if (StringUtils.isBlank(lastUpdatedDate) && StringUtils.isNotBlank(npi) && StringUtils.isNotBlank(nPIDeactivationDate)) {
+				logger.info("Inside NPISERVICE::importNPIRegistryCSVData() :: Skipping deativated NPIs currently");
 				//put logic what to with deactivated NPIs
 				continue;
 			}
@@ -142,18 +156,10 @@ public class NPIService {
 			if (npiFromRepo == null || (npiFromRepo != null && lastUpdatedDateObj.isAfter(npiFromRepo.getLastUpdatedDate()))) {
 				
 				if (StringUtils.isNotBlank(entityTypeCode)) {
-					if (entityTypeCode.trim().equalsIgnoreCase("1")) {
-						entityTypeCodeobj = entityTypeCodes.get(0);
-					} else if (entityTypeCode.trim().equalsIgnoreCase("2")) {
-						entityTypeCodeobj = entityTypeCodes.get(1);
-					}
+					entityTypeCodeobj = entityTypeCodeMap.get(Integer.parseInt(entityTypeCode.trim()));
 				}
 				if (StringUtils.isNotBlank(providerGenderCode)) {
-					if (providerGenderCode.trim().equalsIgnoreCase("M")) {
-						genderCodeObj = genderCodes.get(0);
-					} else if (providerGenderCode.trim().equalsIgnoreCase("F")) {
-						genderCodeObj = genderCodes.get(1);
-					}
+					genderCodeObj = genderCodeMap.get(providerGenderCode.trim());
 				}
 				if (StringUtils.isNotBlank(npiCertificationDate)) {
 					npiCertificationDateObj = LocalDate.parse(npiCertificationDate, formatter);
@@ -198,23 +204,31 @@ public class NPIService {
 						countryData, stateData);
 				nPI.setAddress(adressesForNPI);
 				npiData.add(nPI);
+				logger.info("Inside NPISERVICE::importNPIRegistryCSVData() :: Successfully read CSV file row at line : {}",
+						lineCountForCSVFile.get());
 			}
 		}
 //		For trial :: use remove after testing 
 //		for(NPI n : npiData) {
 //			npiRepository.save(n);
 //		}
-		List<List<NPI>> npiBatches = ListUtils.partition(npiData, 100);
-		for (List<NPI> npis : npiBatches) {
-			executorService.submit(() -> {
-				try {
-					npiRepository.saveAll(npis);
-				} catch (Exception e) {
-					System.out.println("Error while inserting NPI'S data : " + e);
-				}
-			});
+		if (CollectionUtils.isNotEmpty(npiData)) {
+			List<List<NPI>> npiBatches = ListUtils.partition(npiData, 100);
+			for (List<NPI> npis : npiBatches) {
+				executorService.submit(() -> {
+					try {
+						npiRepository.saveAll(npis);
+					} catch (Exception e) {
+						logger.info("Inside NPISERVICE::importNPIRegistryCSVData() :: Error while saving NPIs batch : {} for file : {}",
+								e.getMessage(), multipartFile.getOriginalFilename());
+					}
+				});
+			}
 		}
-		return "Successfully uploaded data";
+		logger.info("Return successfully from NPISERVICE::importNPIRegistryCSVData() ::  Successfully read file for NPI-Registry : {} and process {} record.",
+				multipartFile.getOriginalFilename(), lineCountForCSVFile.get());
+		return CSVFileImportResponse.builder().importResult(ImportResult.SUCCESS).totalRecord(lineCountForCSVFile.get())
+				.description("Successfully uploaded npi-registry data.").build();
 	}
 
 }
