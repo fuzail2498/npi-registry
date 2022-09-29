@@ -86,7 +86,7 @@ public class NPIService {
 		AtomicLong lineCountForCSVFile = new AtomicLong();
 		while (npiRecords.readRecord()) {
 			lineCountForCSVFile.getAndIncrement();
-			logger.info("Inside NPISERVICE::importNPIRegistryCSVData() :: Reading CSV fila at line : {}",
+			logger.info("Inside NPISERVICE::importNPIRegistryCSVData() :: Reading CSV file at line : {}",
 					lineCountForCSVFile.get());
 			EntityTypeCode entityTypeCodeobj = null;
 			GenderCode genderCodeObj = null;
