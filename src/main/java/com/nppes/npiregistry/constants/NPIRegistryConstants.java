@@ -65,5 +65,13 @@ public class NPIRegistryConstants {
 	public static final String NPI_REGISTRY_CSV_HEADER_PARENT_ORGANIZATION_LBN = "Parent Organization LBN";
 	public static final String NPI_REGISTRY_CSV_HEADER_PARENT_ORGANIZATION_TIN = "Parent Organization TIN";
 	
+	// HEADERS FOR TAXONOMY
+	public static final String NPI_REGISTRY_CSV_HEADER_HEALTHCARE_PROVIDER_TAXONOMY_CODE = "Healthcare Provider Taxonomy Code_";
+	public static final String NPI_REGISTRY_CSV_HEADER_HEALTHCARE_PROVIDER_PRIMARY_TAXONOMY_SWITCH = "Healthcare Provider Primary Taxonomy Switch_";
+	public static final String NPI_REGISTRY_CSV_HEADER_HEALTHCARE_PROVIDER_TAXONOMY_GROUP = "Healthcare Provider Taxonomy Group_";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_LICENSE_NUMBER = "Provider License Number_";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_LICENSE_NUMBER_STATE_CODE = "Provider License Number State Code_";
+
+	
 
 }

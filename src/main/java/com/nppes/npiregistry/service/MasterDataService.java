@@ -1,6 +1,7 @@
 package com.nppes.npiregistry.service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Service;
 import com.nppes.npiregistry.domain.Country;
 import com.nppes.npiregistry.domain.EntityTypeCode;
 import com.nppes.npiregistry.domain.GenderCode;
+import com.nppes.npiregistry.domain.PrimaryTaxonomy;
+import com.nppes.npiregistry.domain.ProviderTaxonomyCode;
 import com.nppes.npiregistry.domain.State;
 
 @Service
@@ -21,20 +24,28 @@ public class MasterDataService {
 	private CountryService countryService;
 	private EntityTypeCodeService entityTypeCodeService;
 	private GenderCodesService genderCodesService;
+	private ProviderTaxonomyCodeService proTaxonomyCodeService;
+	private PrimaryTaxonomyService priTaxonomyService;
 
 	@Autowired
 	public MasterDataService(StateService stateService, CountryService countryService,
-			EntityTypeCodeService entityTypeCodeService, GenderCodesService genderCodesService) {
+			EntityTypeCodeService entityTypeCodeService, GenderCodesService genderCodesService,
+			ProviderTaxonomyCodeService proTaxonomyCodeService, PrimaryTaxonomyService priTaxonomyService) {
 		this.stateService = stateService;
 		this.countryService = countryService;
 		this.entityTypeCodeService = entityTypeCodeService;
 		this.genderCodesService = genderCodesService;
+		this.proTaxonomyCodeService = proTaxonomyCodeService;
+		this.priTaxonomyService = priTaxonomyService;
 	}
 
 	private static Map<String, State> stateMap = new HashMap<>();
 	private static Map<Integer, EntityTypeCode> entityTypeCodeMap = new HashMap<>();
 	private static Map<String, GenderCode> genderCodesMap = new HashMap<>();
 	private static Map<String, Country> countryMap = new HashMap<>();
+	private static Map<String, ProviderTaxonomyCode> taxCodeMap = new HashMap<>();
+	private static Map<String, PrimaryTaxonomy> primaryTaxSwitchMap = new HashMap<>();
+
 	private final Logger logger = LoggerFactory.getLogger(MasterDataService.class);
 
 	@PostConstruct
@@ -72,6 +83,22 @@ public class MasterDataService {
 		});
 		logger.info("Return successfully from MasterDataService::setAllGenderCodeToMap()");
 	}
+	
+	@PostConstruct
+	public void setAllTaxonomyCode() {
+		List<ProviderTaxonomyCode> taxonomyCodeDB = proTaxonomyCodeService.getAllTaxonomyCode();
+		taxonomyCodeDB.forEach(taxonomyCode -> {
+			taxCodeMap.put(taxonomyCode.getCode(), taxonomyCode);
+		});
+	}
+
+	@PostConstruct
+	public void setAllPrimaryTaxonomy() {
+		List<PrimaryTaxonomy> primaryTaxonomyDB = priTaxonomyService.getAllPrimaryTaxonomy();
+		primaryTaxonomyDB.forEach(priTaxonomy -> {
+			primaryTaxSwitchMap.put(priTaxonomy.getSwitchCode(), priTaxonomy);
+		});
+	}
 
 	public Map<String, Country> getCountyMap() {
 		return countryMap;
@@ -87,6 +114,14 @@ public class MasterDataService {
 
 	public Map<String, GenderCode> getGenderCodeMap() {
 		return genderCodesMap;
+	}
+	
+	public Map<String, ProviderTaxonomyCode> getTaxonomyCodeMap() {
+		return taxCodeMap;
+	}
+
+	public Map<String, PrimaryTaxonomy> getPrimaryTaxonomyMap() {
+		return primaryTaxSwitchMap;
 	}
 
 }
