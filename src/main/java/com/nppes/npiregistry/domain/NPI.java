@@ -92,27 +92,6 @@ public class NPI {
 	@Column(name = "last_sync_date")
 	private LocalDate lastSyncDate;
 	
-	@Embedded
-	@AttributeOverrides({ @AttributeOverride(name = "firstName", column = @Column(name = "authorized_official_first_name")),
-			@AttributeOverride(name = "lastName", column = @Column(name = "authorized_official_last_name")),
-			@AttributeOverride(name = "middleName", column = @Column(name = "authorized_official_middle_name")),
-			@AttributeOverride(name = "titleOrPosition", column = @Column(name = "authorized_official_title_or_position")),
-			@AttributeOverride(name = "telephoneNumber", column = @Column(name = "authorized_official_telephone_number")),
-			@AttributeOverride(name = "namePrefixText", column = @Column(name = "authorized_official_name_prefix_text")),
-			@AttributeOverride(name = "nameSuffixText", column = @Column(name = "authorized_official_name_suffix_text")),
-			@AttributeOverride(name = "credentialText", column = @Column(name = "authorized_official_credential_text")) })
-	private AuthorizedOfficial authorizedOfficial;
-	
-	@Column(name = "is_sole_proprieter")
-	private boolean isSoleProprieter;
-	
-	@Column(name = "is_organization_subpart")
-	private boolean isOrganizationSubpart;
-	
-	@Column(name = "parent_organization_lbn")
-	private String parentOrganizationLBN;
-	
-	@Column(name = "parent_organization_tin")
-	private String parentOrganizationTIN;
-
+	@OneToMany(mappedBy = "npi", cascade = CascadeType.ALL)
+	private List<Taxonomy> taxonomy;
 }
