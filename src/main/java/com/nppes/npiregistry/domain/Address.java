@@ -13,6 +13,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import com.nppes.npiregistry.enums.AddressDiscriminator;
 import com.nppes.npiregistry.enums.AddressPurpose;
 
 import lombok.AllArgsConstructor;
@@ -40,6 +41,10 @@ public class Address{
 	@Column(name = "address_purpose")
 	@Enumerated(EnumType.STRING)
 	private AddressPurpose addressPurpose;
+	
+	@Column(name = "address_discriminator")
+	@Enumerated(EnumType.STRING)
+	private AddressDiscriminator addressDiscriminator;
 
 	@Column(name = "city_name")
 	private String cityName;

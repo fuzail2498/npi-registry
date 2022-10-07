@@ -26,9 +26,23 @@ public class NPIController {
 	 * @return
 	 * @throws IOException
 	 */
-	@PostMapping("/v1/npi-registry/upload-csv")
+	@PostMapping("/v1/npi-registry/upload-csv/npi-data")
 	public CSVFileImportResponse importNPIRegistryCSVData(MultipartFile multipartFile, HttpServletRequest request) throws IOException {
 		return npiService.importNPIRegistryCSVData(multipartFile);
+	}
+	
+	/**
+	 * This controller method is used to save and update npi-registry provider secondary address CSV file into
+	 * DB.
+	 * 
+	 * @param multipartFile
+	 * @param request
+	 * @return
+	 * @throws IOException
+	 */
+	@PostMapping("/v1/npi-registry/upload-csv/pl")
+	public CSVFileImportResponse importNPIRegistryCSVDataForSecondaryPLAddress(MultipartFile multipartFile, HttpServletRequest request) throws IOException {
+		return npiService.importNPIRegistryCSVDataForSecondaryPLAddress(multipartFile);
 	}
 
 }
