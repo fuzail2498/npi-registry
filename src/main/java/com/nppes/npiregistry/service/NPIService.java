@@ -5,14 +5,15 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -32,10 +33,13 @@ import com.nppes.npiregistry.domain.NPI;
 import com.nppes.npiregistry.domain.State;
 import com.nppes.npiregistry.domain.Taxonomy;
 import com.nppes.npiregistry.dto.CSVFileImportResponse;
+import com.nppes.npiregistry.enums.AddressDiscriminator;
+import com.nppes.npiregistry.enums.AddressPurpose;
 import com.nppes.npiregistry.enums.ImportResult;
 import com.nppes.npiregistry.exception.UnprocessableEntityException;
 import com.nppes.npiregistry.repository.GroupTaxonomyRepository;
 import com.nppes.npiregistry.repository.NPIRepository;
+import com.nppes.npiregistry.utils.CollectionPartitionCreator;
 
 @Service
 public class NPIService {
@@ -109,16 +113,6 @@ public class NPIService {
 			String providerNamePrefixText = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_NAME_PREFIX_TEXT);
 			String providerNameSuffixText = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_NAME_SUFFIX_TEXT);
 			String providerCredentialText = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_CREDENTIAL_TEXT);
-			String providerOtherOrganisationName = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_OTHER_ORGANIZATION_NAME);
-			String providerOtherOrganizationNameTypeCode = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_OTHER_LAST_NAME_TYPE_CODE);
-			String providerOtherLastName = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_OTHER_LAST_NAME);
-			String providerOtherFirstName = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_OTHER_FIRST_NAME);
-			String providerOtherMiddleName = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_OTHER_MIDDLE_NAME);
-			String providerOtherNamePrefixText = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_OTHER_NAME_PREFIX_TEXT);
-			String providerOtherNameSuffixText = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_OTHER_NAME_SUFFIX_TEXT);
-			String providerOtherCreddentialText = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_OTHER_CREDENTIAL_TEXT);
-			String providerOtherLastNameTypeCode = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_OTHER_LAST_NAME_TYPE_CODE);
-			String nPIDeactivationReasonCode = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_NPI_DEACTIVATION_REASON_CODE);
 			String nPIDeactivationDate =  npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_NPI_DEACTIVATION_DATE);
 			String npiReactivationDate =  npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_NPI_REACTIVATION_DATE);
 			String npiCertificationDate =  npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_CERTIFICATION_DATE);
@@ -139,6 +133,7 @@ public class NPIService {
 				lastUpdatedDateObj = LocalDate.parse(lastUpdatedDate, formatter);
 			}
 			NPI npiFromRepo = npiRepository.findByNpi(Long.parseLong(npi));
+			System.out.println(lineCountForCSVFile.get());
 			if (npiFromRepo == null || (npiFromRepo != null && lastUpdatedDateObj.isAfter(npiFromRepo.getLastUpdatedDate()))) {
 				if (StringUtils.isNotBlank(entityTypeCode)) {
 					entityTypeCodeobj = entityTypeCodeMap.get(Integer.parseInt(entityTypeCode.trim()));
@@ -173,12 +168,11 @@ public class NPIService {
 						stateData, groupTaxonomies);
 				nPI.setTaxonomy(taxonomyForNPI);
 				npiData.add(nPI);
-				if (npiData.size() % 10000 == 0) {
+				if (npiData.size() % 500000 == 0) {
 					logger.info("Inside NPISERVICE::importNPIRegistryCSVData() :: CSV file reached 10000 records need to process these data first and clean heap memory for further data processing");
-					saveNPIrecords(new ArrayList<>(npiData), multipartFile.getOriginalFilename());
+					saveNPIrecords(npiData, multipartFile.getOriginalFilename());
 					npiData.clear();
 				}
-				System.out.println(npiData.size());
 				logger.info("Inside NPISERVICE::importNPIRegistryCSVData() :: Successfully read CSV file row at line : {}",
 						lineCountForCSVFile.get());
 			}
@@ -193,6 +187,98 @@ public class NPIService {
 	}
 	
 	/**
+	 * This method is used to read data from CSV file related to NPI-REGISTRY for secondary PL address
+	 * associated data related to NPIs into DB
+	 * 
+	 * @param multipartFile
+	 * @return CSVFileImportResponse
+	 * @throws IOException
+	 */
+	public CSVFileImportResponse importNPIRegistryCSVDataForSecondaryPLAddress(MultipartFile multipartFile) throws IOException {
+		logger.info("Inside NPISERVICE::importNPIRegistryCSVDataForSecondaryPLAddress():: Starting process for CSV loading");
+		if (multipartFile == null || FilenameUtils.getExtension(multipartFile.getOriginalFilename()) == "") {
+			logger.error("Inside NPISERVICE::importNPIRegistryCSVDataForSecondaryPLAddress() :: Please provide valid CSV file for NPI-REGISTRY");
+			throw new UnprocessableEntityException("Please provide a valid csv file.");
+		}
+		if (!FilenameUtils.getExtension(multipartFile.getOriginalFilename()).toUpperCase().equals("CSV")) {
+			logger.error("Inside NPISERVICE::importNPIRegistryCSVDataForSecondaryPLAddress() :: Invalid File extension,Only CSV file acceptable.");
+			throw new UnprocessableEntityException("Invalid File extension,Only CSV file acceptable.");
+		}
+		
+		List<NPI> npiData = new ArrayList<NPI>();
+		Map<String, Country> countryData = masterDataService.getCountyMap();
+		Map<String, State> stateData = masterDataService.getStateMap();
+		CsvReader npiRecords = new CsvReader(multipartFile.getInputStream(), StandardCharsets.UTF_8);
+		npiRecords.readHeaders();
+		AtomicLong lineCountForCSVFile = new AtomicLong();
+		while (npiRecords.readRecord()) {
+			lineCountForCSVFile.getAndIncrement();
+			logger.info("Inside NPISERVICE::importNPIRegistryCSVDataForSecondaryPLAddress() :: Reading CSV file at line : {}",
+					lineCountForCSVFile.get());
+			String npi = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_NPI);
+			String secondaryPLFirstLineAddress = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_FIRST_LINE_SECONDARY_PL_ADDRESS);
+			String secondaryPLSecondLineAddress = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_SECOND_LINE_SECONDARY_PL_ADDRESS);
+			String secondaryPLCityName = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_SECONDARY_PL_ADDRESS_CITY_NAME);
+			String secondaryPLStateName = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_SECONDARY_PL_ADDRESS_STATE_NAME);
+			String secondaryPLPostalCode = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_SECONDARY_PL_ADDRESS_POSTAL_CODE);
+			String secondaryPLCountryCode = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_SECONDARY_PL_ADDRESS_COUNTRY_CODE);
+			String secondaryPLTelephoneNumber = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_SECONDARY_PL_ADDRESS_TELEPHONE_NUMBER);
+			String secondaryPLTelephoneExtension = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_SECONDARY_PL_ADDRESS_TELEPHONE_EXTENSION);
+			String secondaryPLFaxNumber = npiRecords.get(NPIRegistryConstants.NPI_REGISTRY_CSV_HEADER_PROVIDER_SECONDARY_PL_ADDRESS_FAX_NUMBER);
+			
+			NPI npiFromRepo = npiRepository.findByNpi(Long.parseLong(npi));
+			if (npiFromRepo == null) {
+				logger.error("Inside NPISERVICE::importNPIRegistryCSVDataForSecondaryPLAddress() :: NPI not found in the inventory at line {}.",lineCountForCSVFile.get());
+				throw new UnprocessableEntityException("NPI not found in the inventory at line "+lineCountForCSVFile.get()+" for NPI "+npi);
+			}
+			
+			Optional<Address> secondaryPLAddressFromRepo = Optional.empty();
+			if (StringUtils.isNotBlank(secondaryPLFirstLineAddress)
+					|| StringUtils.isNotBlank(secondaryPLSecondLineAddress)
+					|| StringUtils.isNotBlank(secondaryPLCityName)
+					|| StringUtils.isNotBlank(secondaryPLStateName)
+					|| StringUtils.isNotBlank(secondaryPLPostalCode)
+					|| StringUtils.isNotBlank(secondaryPLCountryCode)
+					|| StringUtils.isNotBlank(secondaryPLTelephoneNumber)
+					|| StringUtils.isNotBlank(secondaryPLTelephoneExtension)
+					|| StringUtils.isNotBlank(secondaryPLFaxNumber)) {
+				logger.info("Inside NPISERVICE::importNPIRegistryCSVDataForSecondaryPLAddress() :: Creating address object for Secondary PL Address.");
+				Country country = null;
+				State state = null;
+				if (StringUtils.isNotBlank(secondaryPLStateName)) {
+					state = stateData.get(secondaryPLStateName);
+				}
+				if (StringUtils.isNotBlank(secondaryPLCountryCode)) {
+					country = countryData.get(secondaryPLCountryCode);
+				}
+				if (npiFromRepo != null) {
+					secondaryPLAddressFromRepo = npiFromRepo.getAddress().stream()
+							.filter(a -> a.getAddressPurpose().equals(AddressPurpose.LOCATION)
+									&& a.getAddressDiscriminator().equals(AddressDiscriminator.PRACTICE_LOCATIONS))
+										.findAny();
+				}
+				Address secondaryPLAddress = new Address(
+						secondaryPLAddressFromRepo.isPresent() ? secondaryPLAddressFromRepo.get().getId() : null,
+								secondaryPLFirstLineAddress, secondaryPLSecondLineAddress,
+						AddressPurpose.LOCATION, AddressDiscriminator.PRACTICE_LOCATIONS, secondaryPLCityName,
+						secondaryPLPostalCode, country, state,
+						secondaryPLTelephoneNumber, secondaryPLFaxNumber, secondaryPLTelephoneExtension, "DOM",
+						false, npiFromRepo);
+				npiFromRepo.setAddress(new ArrayList<>(Arrays.asList(secondaryPLAddress)));
+				npiData.add(npiFromRepo);
+				
+			}	
+		}
+		if (CollectionUtils.isNotEmpty(npiData)) {
+			saveNPIrecords(npiData, multipartFile.getOriginalFilename());
+		}
+		logger.info("Return successfully from NPISERVICE::importNPIRegistryCSVDataForSecondaryPLAddress() ::  Successfully read file for NPI-Registry : {} and process {} record.",
+				multipartFile.getOriginalFilename(), lineCountForCSVFile.get());
+		return CSVFileImportResponse.builder().importResult(ImportResult.SUCCESS).totalRecord(lineCountForCSVFile.get())
+				.description("Successfully uploaded npi-registry secondary practice location data.").build();
+	}
+	
+	/**
 	 * This method is used to save NPI records in batches.
 	 * 
 	 * @param nPIS
@@ -201,7 +287,7 @@ public class NPIService {
 	public void saveNPIrecords(List<NPI> nPIS, String filename) {
 		logger.info("Inside NPISERVICE::saveNPIrecords()");
 		if (CollectionUtils.isNotEmpty(nPIS)) {
-			List<List<NPI>> npiBatches = ListUtils.partition(nPIS, 1000);
+			List<List<NPI>> npiBatches = CollectionPartitionCreator.ofSize(nPIS, 1000);
 			for (List<NPI> npis : npiBatches) {
 				executorService.submit(() -> {
 					try {

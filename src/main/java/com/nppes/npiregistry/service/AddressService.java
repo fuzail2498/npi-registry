@@ -18,6 +18,7 @@ import com.nppes.npiregistry.domain.Address;
 import com.nppes.npiregistry.domain.Country;
 import com.nppes.npiregistry.domain.NPI;
 import com.nppes.npiregistry.domain.State;
+import com.nppes.npiregistry.enums.AddressDiscriminator;
 import com.nppes.npiregistry.enums.AddressPurpose;
 
 @Service
@@ -88,12 +89,14 @@ public class AddressService {
 			}
 			if (npiFromRepo != null) {
 				businessMailingAddressFromRepo = npiFromRepo.getAddress().stream()
-						.filter(a -> a.getAddressPurpose().equals(AddressPurpose.MAILING)).findAny();
+						.filter(a -> a.getAddressPurpose().equals(AddressPurpose.MAILING)
+								&& a.getAddressDiscriminator().equals(AddressDiscriminator.ADDRESSES))
+						 			.findAny();
 			}
 			Address businessMailingAddress = new Address(
 					businessMailingAddressFromRepo.isPresent() ? businessMailingAddressFromRepo.get().getId() : null,
 					providerFirstLineBusinessMailingAddress, providerSecondLineBusinessMailingAddress,
-					AddressPurpose.MAILING, providerBusinessMailingAddressCityName,
+					AddressPurpose.MAILING, AddressDiscriminator.ADDRESSES, providerBusinessMailingAddressCityName,
 					providerBusinessMailingAddressPostalCode, country, state,
 					providerBusinessMailingAddressTelephoneNumber, providerBusinessMailingAddressFaxNumber, "", "DOM",
 					false, nPI);
@@ -119,14 +122,16 @@ public class AddressService {
 			}
 			if (npiFromRepo != null) {
 				businessPLAddressFromRepo = npiFromRepo.getAddress().stream()
-						.filter(a -> a.getAddressPurpose().equals(AddressPurpose.LOCATION)).findAny();
+						.filter(a -> a.getAddressPurpose().equals(AddressPurpose.LOCATION)
+								&& a.getAddressDiscriminator().equals(AddressDiscriminator.ADDRESSES))
+									.findAny();
 			}
 			Address businessPLAddress = new Address(
 					businessPLAddressFromRepo.isPresent() ? businessPLAddressFromRepo.get().getId() : null,
 					providerFirstLineBusinessPLAddress, providerSecondLineBusinessPLAddress, AddressPurpose.LOCATION,
-					providerBusinessPLAddressCityName, providerBusinessPLAddressPostalCode, country, state,
-					providerBusinessPLAddressTelephoneNumber, providerBusinessPLAddressFaxNumber, "", "DOM", false,
-					nPI);
+					AddressDiscriminator.ADDRESSES, providerBusinessPLAddressCityName,
+					providerBusinessPLAddressPostalCode, country, state, providerBusinessPLAddressTelephoneNumber,
+					providerBusinessPLAddressFaxNumber, "", "DOM", false, nPI);
 			addresses.add(businessPLAddress);
 
 		}

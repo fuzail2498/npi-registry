@@ -71,6 +71,17 @@ public class NPIRegistryConstants {
 	public static final String NPI_REGISTRY_CSV_HEADER_HEALTHCARE_PROVIDER_TAXONOMY_GROUP = "Healthcare Provider Taxonomy Group_";
 	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_LICENSE_NUMBER = "Provider License Number_";
 	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_LICENSE_NUMBER_STATE_CODE = "Provider License Number State Code_";
+	
+	//HEADER FOR PROVIDER SECONDARY PL ADDRESS
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_FIRST_LINE_SECONDARY_PL_ADDRESS = "Provider Secondary Practice Location Address- Address Line 1";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_SECOND_LINE_SECONDARY_PL_ADDRESS ="Provider Secondary Practice Location Address-  Address Line 2";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_SECONDARY_PL_ADDRESS_CITY_NAME ="Provider Secondary Practice Location Address - City Name";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_SECONDARY_PL_ADDRESS_STATE_NAME = "Provider Secondary Practice Location Address - State Name";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_SECONDARY_PL_ADDRESS_POSTAL_CODE = "Provider Secondary Practice Location Address - Postal Code";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_SECONDARY_PL_ADDRESS_COUNTRY_CODE ="Provider Secondary Practice Location Address - Country Code (If outside U.S.)";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_SECONDARY_PL_ADDRESS_TELEPHONE_NUMBER = "Provider Secondary Practice Location Address - Telephone Number";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_SECONDARY_PL_ADDRESS_TELEPHONE_EXTENSION = "Provider Secondary Practice Location Address - Telephone Extension";
+	public static final String NPI_REGISTRY_CSV_HEADER_PROVIDER_SECONDARY_PL_ADDRESS_FAX_NUMBER ="Provider Practice Location Address - Fax Number";
 
 	
 
