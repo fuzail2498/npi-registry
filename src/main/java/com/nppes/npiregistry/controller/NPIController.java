@@ -26,7 +26,7 @@ public class NPIController {
 	 * @return
 	 * @throws IOException
 	 */
-	@PostMapping("/v1/npi-registry/upload-csv/npi-data")
+	@PostMapping("/v1/upload/npi-data")
 	public CSVFileImportResponse importNPIRegistryCSVData(MultipartFile multipartFile, HttpServletRequest request) throws IOException {
 		return npiService.importNPIRegistryCSVData(multipartFile);
 	}
@@ -40,7 +40,7 @@ public class NPIController {
 	 * @return
 	 * @throws IOException
 	 */
-	@PostMapping("/v1/npi-registry/upload-csv/pl")
+	@PostMapping("/v1/upload/npi-data/pl")
 	public CSVFileImportResponse importNPIRegistryCSVDataForSecondaryPLAddress(MultipartFile multipartFile, HttpServletRequest request) throws IOException {
 		return npiService.importNPIRegistryCSVDataForSecondaryPLAddress(multipartFile);
 	}
